@@ -17,7 +17,10 @@ import {
   Radar, 
   Trophy,
   Swords,
-  ChevronDown
+  ChevronDown,
+  ChefHat,
+  Scissors,
+  BookOpen
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { playSound } from '../utils/audio';
@@ -40,7 +43,10 @@ export const GameHUD = ({ activeTab, setActiveTab, onOpenCompanyModal }) => {
   } = useGame();
 
   const navItems = [
-    { id: 'world-map', label: '🎮 World Map', isSpecial: true },
+    { id: 'world-map', label: '🎮 Candy Map', isSpecial: true },
+    { id: 'code-kitchen', label: '🍳 Code Kitchen', isSpecial: true },
+    { id: 'resume-salon', label: '💄 Resume Salon', isSpecial: true },
+    { id: 'company-history', label: '🏢 Company Lore' },
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'worlds', label: 'Company Worlds' },
     { id: 'quests', label: 'Quests' },
@@ -56,14 +62,13 @@ export const GameHUD = ({ activeTab, setActiveTab, onOpenCompanyModal }) => {
     <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[#070913]/90 backdrop-blur-xl">
       {/* Top Arcade Status Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between border-b border-white/5 text-xs">
-        {/* Brand & Team */}
         <div className="flex items-center gap-2">
-          <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-indigo-300 font-mono font-bold border border-indigo-500/30 flex items-center gap-1">
-            <span>⚡</span>
+          <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 text-pink-300 font-mono font-bold border border-pink-500/40 flex items-center gap-1">
+            <span>✨</span>
             <span>TEAM GLITCH THEORY</span>
           </span>
           <span className="hidden sm:inline text-slate-500">•</span>
-          <span className="hidden sm:inline text-slate-400 font-mono text-[11px]">PLACIFY RPG ARCADE</span>
+          <span className="hidden sm:inline text-slate-300 font-mono text-[11px]">PLACIFY CASUAL ARCADE</span>
         </div>
 
         {/* Quick Utility Triggers */}
@@ -114,17 +119,17 @@ export const GameHUD = ({ activeTab, setActiveTab, onOpenCompanyModal }) => {
             }}
             className="flex items-center gap-2.5 cursor-pointer group select-none"
           >
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-600 to-cyan-400 p-0.5 shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition">
-              <div className="w-full h-full bg-[#0d1020] rounded-[14px] flex items-center justify-center text-xl">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-600 to-cyan-400 p-0.5 shadow-lg shadow-pink-500/30 group-hover:scale-105 transition">
+              <div className="w-full h-full bg-[#0d1020] rounded-[14px] flex items-center justify-center text-2xl">
                 {currentSkinObj.icon}
               </div>
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-heading font-black text-lg tracking-wider text-white group-hover:text-cyan-300 transition">
+                <span className="font-heading font-black text-xl tracking-wider gradient-text-rainbow group-hover:scale-105 transition">
                   PLACIFY
                 </span>
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold">
+                <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-pink-500/20 text-pink-300 border border-pink-500/40 font-bold">
                   ARCADE
                 </span>
               </div>
@@ -159,7 +164,7 @@ export const GameHUD = ({ activeTab, setActiveTab, onOpenCompanyModal }) => {
                 setShowShopModal(true);
               }
             }}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-2xl bg-rose-500/10 border border-rose-500/25 transition cursor-pointer ${
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-2xl bg-rose-500/15 border border-rose-500/30 transition cursor-pointer ${
               hearts <= 1 ? 'animate-bounce border-rose-500' : ''
             }`}
             title="Candidate Lives (Depletes on mistakes. Refill in Shop!)"
@@ -170,7 +175,7 @@ export const GameHUD = ({ activeTab, setActiveTab, onOpenCompanyModal }) => {
                 size={16}
                 className={`transition ${
                   i < hearts
-                    ? 'text-rose-500 fill-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.6)]'
+                    ? 'text-rose-500 fill-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]'
                     : 'text-slate-700'
                 }`}
               />
@@ -189,7 +194,7 @@ export const GameHUD = ({ activeTab, setActiveTab, onOpenCompanyModal }) => {
               playSound('click');
               setShowShopModal(true);
             }}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 text-amber-300 hover:from-amber-500/30 hover:to-orange-500/30 transition cursor-pointer font-heading font-bold text-xs shadow-md shadow-amber-500/10"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 text-amber-300 hover:from-amber-500/30 hover:to-orange-500/30 transition cursor-pointer font-heading font-bold text-xs shadow-md shadow-amber-500/20"
           >
             <ShoppingBag size={15} className="text-amber-400" />
             <span className="hidden sm:inline">Item Shop</span>
@@ -197,7 +202,7 @@ export const GameHUD = ({ activeTab, setActiveTab, onOpenCompanyModal }) => {
 
           {/* Player Level Badge */}
           <div className="flex items-center gap-2 pl-2 border-l border-white/10">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-heading font-black text-white text-xs shadow-md shadow-purple-500/30">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center font-heading font-black text-white text-xs shadow-md shadow-pink-500/30">
               {user.level}
             </div>
             <div className="hidden lg:block text-left">
@@ -211,7 +216,7 @@ export const GameHUD = ({ activeTab, setActiveTab, onOpenCompanyModal }) => {
       </div>
 
       {/* Navigation Sub-bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
           return (
@@ -224,8 +229,8 @@ export const GameHUD = ({ activeTab, setActiveTab, onOpenCompanyModal }) => {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-heading font-semibold whitespace-nowrap transition cursor-pointer relative ${
                 item.isSpecial
                   ? isActive
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black shadow-lg shadow-cyan-500/30 border border-cyan-400'
-                    : 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/25'
+                    ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 text-white font-black shadow-lg shadow-pink-500/30 border border-pink-400'
+                    : 'bg-pink-500/15 text-pink-300 border border-pink-500/30 hover:bg-pink-500/25'
                   : isActive
                   ? 'bg-gradient-to-r from-indigo-600/40 to-purple-600/40 text-white border border-indigo-500/50 shadow-sm'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-transparent'
