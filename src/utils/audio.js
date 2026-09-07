@@ -1,4 +1,4 @@
-// Web Audio API Retro-Cyber Sound Synthesizer
+// Web Audio API Retro-Cyber & Arcade Sound Synthesizer
 let audioCtx = null;
 let soundEnabled = true;
 
@@ -22,7 +22,7 @@ const getAudioContext = () => {
   return audioCtx;
 };
 
-export const playSound = (type) => {
+export const playSound = (type, meta = {}) => {
   if (!soundEnabled) return;
   try {
     const ctx = getAudioContext();
@@ -36,7 +36,7 @@ export const playSound = (type) => {
         const gain = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(600, now);
-        osc.frequency.exponentialRampToValueAtTime(800, now + 0.04);
+        osc.frequency.exponentialRampToValueAtTime(850, now + 0.04);
         gain.gain.setValueAtTime(0.12, now);
         gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
         osc.connect(gain);
@@ -47,7 +47,6 @@ export const playSound = (type) => {
       }
 
       case 'correct': {
-        // Two-tone rising major chime
         [523.25, 659.25, 783.99].forEach((freq, i) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
@@ -63,24 +62,103 @@ export const playSound = (type) => {
         break;
       }
 
-      case 'wrong': {
-        // Low discord buzz
+      case 'combo_hit': {
+        // Dynamic rising pitch based on combo streak level (1x, 2x, 3x, 4x...)
+        const combo = meta.combo || 1;
+        const baseFreq = 440 + Math.min(600, combo * 80);
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(160, now);
-        osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+        osc.frequency.setValueAtTime(baseFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, now + 0.12);
         gain.gain.setValueAtTime(0.18, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+        gain.gain.linearRampToValueAtTime(0.001, now + 0.15);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(now);
-        osc.stop(now + 0.25);
+        osc.stop(now + 0.15);
+        break;
+      }
+
+      case 'wrong':
+      case 'heart_lost': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.linearRampToValueAtTime(90, now + 0.3);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+        break;
+      }
+
+      case 'star_earned': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880 + (meta.star || 1) * 220, now);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.35);
+        break;
+      }
+
+      case 'chest_open': {
+        // Magical upward sparkling arpeggio
+        [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98].forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+          gain.gain.setValueAtTime(0.15, now + idx * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.4);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + idx * 0.06);
+          osc.stop(now + idx * 0.06 + 0.4);
+        });
+        break;
+      }
+
+      case 'powerup_used': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.25);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.001, now + 0.28);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.28);
+        break;
+      }
+
+      case 'freeze_sound': {
+        // High shimmery chime
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1400, now);
+        osc.frequency.linearRampToValueAtTime(800, now + 0.35);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.35);
         break;
       }
 
       case 'boss_hit': {
-        // Laser strike impact
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sawtooth';
@@ -96,7 +174,6 @@ export const playSound = (type) => {
       }
 
       case 'boss_attack': {
-        // Low rumble thunder attack
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'triangle';
@@ -112,7 +189,6 @@ export const playSound = (type) => {
       }
 
       case 'level_up': {
-        // Heroic multi-note arpeggio
         const notes = [440, 554.37, 659.25, 880, 1108.73];
         notes.forEach((freq, idx) => {
           const osc = ctx.createOscillator();
@@ -129,25 +205,7 @@ export const playSound = (type) => {
         break;
       }
 
-      case 'quest_complete': {
-        // Coin sparkle
-        [987.77, 1318.51].forEach((freq, idx) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, now + idx * 0.07);
-          gain.gain.setValueAtTime(0.2, now + idx * 0.07);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.35);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now + idx * 0.07);
-          osc.stop(now + idx * 0.07 + 0.35);
-        });
-        break;
-      }
-
       case 'victory': {
-        // Grand victory chord progression
         const chord1 = [523.25, 659.25, 783.99];
         const chord2 = [587.33, 739.99, 880.00];
         const chord3 = [659.25, 830.61, 987.77];

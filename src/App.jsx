@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { GameProvider, useGame } from './context/GameContext';
-import { Navbar } from './components/Navbar';
+import { GameHUD } from './components/GameHUD';
 import { CompanySelectorModal } from './components/CompanySelectorModal';
 import { LevelUpModal } from './components/LevelUpModal';
 import { CertificateModal } from './components/CertificateModal';
 import { AIGlitchCoachModal } from './components/AIGlitchCoachModal';
+import { GameShopModal } from './components/GameShopModal';
+import { LootChestModal } from './components/LootChestModal';
 
+import { GameWorldMapView } from './views/GameWorldMapView';
+import { ArcadeLevelPlayView } from './views/ArcadeLevelPlayView';
 import { DashboardView } from './views/DashboardView';
 import { AssessmentView } from './views/AssessmentView';
 import { SkillRadarView } from './views/SkillRadarView';
@@ -19,98 +23,127 @@ import { SkillTreeView } from './views/SkillTreeView';
 import { LeaderboardBadgesView } from './views/LeaderboardBadgesView';
 
 const MainApp = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('world-map');
   const [selectedStageForRunner, setSelectedStageForRunner] = useState(1);
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
 
+  const { activePlayLevel, setActivePlayLevel } = useGame();
+
+  const handleSelectLevelToPlay = (levelNumber) => {
+    setActivePlayLevel(levelNumber);
+  };
+
+  const handleExitLevel = () => {
+    setActivePlayLevel(null);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#090a10] text-[#f8fafc]">
-      {/* Top Navbar HUD */}
-      <Navbar 
+    <div className="min-h-screen flex flex-col bg-[#070913] text-[#f8fafc]">
+      {/* Top Arcade Gaming HUD */}
+      <GameHUD 
         activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
+        setActiveTab={(tab) => {
+          setActivePlayLevel(null);
+          setActiveTab(tab);
+        }} 
         onOpenCompanyModal={() => setIsCompanyModalOpen(true)}
       />
 
-      {/* Main Content Area */}
+      {/* Main Arcade Arena & World Map Router */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'dashboard' && (
-          <DashboardView 
-            setActiveTab={setActiveTab} 
-            onOpenCompanyModal={() => setIsCompanyModalOpen(true)} 
+        {/* If user is actively playing a level */}
+        {activePlayLevel !== null ? (
+          <ArcadeLevelPlayView 
+            levelNumber={activePlayLevel} 
+            onExitLevel={handleExitLevel} 
           />
-        )}
+        ) : (
+          <>
+            {activeTab === 'world-map' && (
+              <GameWorldMapView onSelectLevelToPlay={handleSelectLevelToPlay} />
+            )}
 
-        {activeTab === 'assessment' && (
-          <AssessmentView setActiveTab={setActiveTab} />
-        )}
+            {activeTab === 'dashboard' && (
+              <DashboardView 
+                setActiveTab={setActiveTab} 
+                onOpenCompanyModal={() => setIsCompanyModalOpen(true)} 
+              />
+            )}
 
-        {activeTab === 'radar' && (
-          <SkillRadarView setActiveTab={setActiveTab} />
-        )}
+            {activeTab === 'assessment' && (
+              <AssessmentView setActiveTab={setActiveTab} />
+            )}
 
-        {activeTab === 'worlds' && (
-          <CompanyWorldsView 
-            setActiveTab={setActiveTab} 
-            setSelectedStageForRunner={setSelectedStageForRunner} 
-            onOpenCompanyModal={() => setIsCompanyModalOpen(true)} 
-          />
-        )}
+            {activeTab === 'radar' && (
+              <SkillRadarView setActiveTab={setActiveTab} />
+            )}
 
-        {activeTab === 'stage-runner' && (
-          <StageRunnerView 
-            stageNumber={selectedStageForRunner} 
-            setActiveTab={setActiveTab} 
-          />
-        )}
+            {activeTab === 'worlds' && (
+              <CompanyWorldsView 
+                setActiveTab={setActiveTab} 
+                setSelectedStageForRunner={setSelectedStageForRunner} 
+                onOpenCompanyModal={() => setIsCompanyModalOpen(true)} 
+              />
+            )}
 
-        {activeTab === 'boss' && (
-          <BossBattleView setActiveTab={setActiveTab} />
-        )}
+            {activeTab === 'stage-runner' && (
+              <StageRunnerView 
+                stageNumber={selectedStageForRunner} 
+                setActiveTab={setActiveTab} 
+              />
+            )}
 
-        {activeTab === 'code-arena' && (
-          <CodeArenaView />
-        )}
+            {activeTab === 'boss' && (
+              <BossBattleView setActiveTab={setActiveTab} />
+            )}
 
-        {activeTab === 'mock-interview' && (
-          <AIMockInterviewView />
-        )}
+            {activeTab === 'code-arena' && (
+              <CodeArenaView />
+            )}
 
-        {activeTab === 'quests' && (
-          <QuestsView setActiveTab={setActiveTab} />
-        )}
+            {activeTab === 'mock-interview' && (
+              <AIMockInterviewView />
+            )}
 
-        {activeTab === 'skill-tree' && (
-          <SkillTreeView />
-        )}
+            {activeTab === 'quests' && (
+              <QuestsView setActiveTab={setActiveTab} />
+            )}
 
-        {activeTab === 'leaderboard' && (
-          <LeaderboardBadgesView />
+            {activeTab === 'skill-tree' && (
+              <SkillTreeView />
+            )}
+
+            {activeTab === 'leaderboard' && (
+              <LeaderboardBadgesView />
+            )}
+          </>
         )}
       </main>
 
-      {/* Modals */}
+      {/* Interactive Game Modals */}
       <CompanySelectorModal 
         isOpen={isCompanyModalOpen} 
         onClose={() => setIsCompanyModalOpen(false)} 
       />
+      <GameShopModal />
+      <LootChestModal />
       <LevelUpModal />
       <CertificateModal />
       <AIGlitchCoachModal />
 
       {/* Footer */}
-      <footer className="w-full border-t border-white/10 bg-[#07080d] py-6 text-xs text-slate-500">
+      <footer className="w-full border-t border-white/10 bg-[#05070e] py-6 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="text-base">⚡</span>
-            <span className="font-heading font-black text-white">PLACIFY</span>
-            <span>• Gamify Your Placement Journey</span>
+            <span className="font-heading font-black text-white">PLACIFY ARCADE</span>
+            <span>• 100% Gamified Placement RPG</span>
           </div>
 
-          <div className="flex items-center gap-2 text-slate-400 font-mono">
-            <span>Built by <strong>Team Glitch Theory</strong></span>
+          <div className="flex items-center gap-2 text-slate-400 font-mono text-[11px]">
+            <span>Team Glitch Theory</span>
             <span>•</span>
-            <span className="text-indigo-400">Choose Company → Take Assessment → Find Skill Gaps → Quests → Boss Battle</span>
+            <span className="text-cyan-400">Level 1 → Level 10 Grandmaster Placement Journey</span>
           </div>
         </div>
       </footer>

@@ -3,6 +3,7 @@ import confetti from 'canvas-confetti';
 import { playSound, toggleSound as setAudioMute } from '../utils/audio';
 import { INITIAL_QUESTS, generateSkillGapQuests } from '../data/quests';
 import { getCompanyById } from '../data/companies';
+import { AVATAR_SKINS } from '../data/shopItems';
 
 const GameContext = createContext();
 
@@ -22,37 +23,101 @@ const LEVEL_TITLES = [
 const INITIAL_USER = {
   name: 'Kamalasshni M',
   avatar: '🚀',
-  level: 3,
-  levelTitle: 'Code Squire',
-  xp: 1250,
-  gems: 350,
+  level: 1,
+  levelTitle: 'Intern Initiate',
+  xp: 150,
+  gems: 120,
   streak: 5,
   targetCompanyId: 'google',
-  priScore: 78
+  priScore: 65
 };
 
 const INITIAL_SKILL_MASTERY = {
-  aptitude: 75,
-  dsa: 65,
-  core_cs: 80,
-  system_design: 60,
-  hr: 85
+  aptitude: 65,
+  dsa: 55,
+  core_cs: 70,
+  system_design: 50,
+  hr: 75
 };
 
-const INITIAL_BADGES = [
-  { id: 'b-first-login', name: 'Placify Initiate', desc: 'Joined the gamified placement journey.', icon: '⚡', unlockedAt: 'Day 1' },
-  { id: 'b-streak-5', name: 'Streak Flame', desc: 'Maintained a 5-day daily placement streak.', icon: '🔥', unlockedAt: 'Day 5' },
-  { id: 'b-algo-solve', name: 'Clean Complexity', desc: 'Solved an optimal O(N) Hash Map algorithm in the Code Arena.', icon: '💎', unlockedAt: 'Day 3' }
-];
-
 export const GameProvider = ({ children }) => {
-  // Load from localStorage or defaults
+  // User Profile
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('placify_user');
       return saved ? JSON.parse(saved) : INITIAL_USER;
     } catch {
       return INITIAL_USER;
+    }
+  });
+
+  // Hearts / Lives System (Max 5)
+  const [hearts, setHearts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('placify_hearts');
+      return saved !== null ? Number(saved) : 5;
+    } catch {
+      return 5;
+    }
+  });
+  const maxHearts = 5;
+
+  // Level Progression: unlockedLevels array (e.g. [1, 2, 3])
+  const [unlockedLevels, setUnlockedLevels] = useState(() => {
+    try {
+      const saved = localStorage.getItem('placify_unlocked_levels');
+      return saved ? JSON.parse(saved) : [1];
+    } catch {
+      return [1];
+    }
+  });
+
+  // Stars per level: { 1: 3, 2: 2, ... }
+  const [levelStars, setLevelStars] = useState(() => {
+    try {
+      const saved = localStorage.getItem('placify_level_stars');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // High Scores: { 1: 850, ... }
+  const [highScores, setHighScores] = useState(() => {
+    try {
+      const saved = localStorage.getItem('placify_high_scores');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Power-up Inventory
+  const [inventory, setInventory] = useState(() => {
+    try {
+      const saved = localStorage.getItem('placify_inventory');
+      return saved ? JSON.parse(saved) : { time_freeze: 2, excalibur: 2, shield: 1, xp_potion: 1 };
+    } catch {
+      return { time_freeze: 2, excalibur: 2, shield: 1, xp_potion: 1 };
+    }
+  });
+
+  // Active Avatar Skin
+  const [avatarSkin, setAvatarSkin] = useState(() => {
+    try {
+      const saved = localStorage.getItem('placify_avatar_skin');
+      return saved || 'cyber_hacker';
+    } catch {
+      return 'cyber_hacker';
+    }
+  });
+
+  const [unlockedSkins, setUnlockedSkins] = useState(() => {
+    try {
+      const saved = localStorage.getItem('placify_unlocked_skins');
+      return saved ? JSON.parse(saved) : ['cyber_hacker'];
+    } catch {
+      return ['cyber_hacker'];
     }
   });
 
@@ -104,9 +169,9 @@ export const GameProvider = ({ children }) => {
   const [badges, setBadges] = useState(() => {
     try {
       const saved = localStorage.getItem('placify_badges');
-      return saved ? JSON.parse(saved) : INITIAL_BADGES;
+      return saved ? JSON.parse(saved) : [];
     } catch {
-      return INITIAL_BADGES;
+      return [];
     }
   });
 
@@ -114,56 +179,36 @@ export const GameProvider = ({ children }) => {
   const [levelUpModalData, setLevelUpModalData] = useState(null);
   const [showCertModal, setShowCertModal] = useState(false);
   const [showGlitchCoachModal, setShowGlitchCoachModal] = useState(false);
+  const [showShopModal, setShowShopModal] = useState(false);
+  const [showLootChest, setShowLootChest] = useState(false);
+  const [lootChestData, setLootChestData] = useState(null);
+  const [activePlayLevel, setActivePlayLevel] = useState(null);
 
   // Sync to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('placify_user', JSON.stringify(user));
-    } catch (e) { console.error(e); }
-  }, [user]);
-
-  useEffect(() => {
-    try {
+      localStorage.setItem('placify_hearts', String(hearts));
+      localStorage.setItem('placify_unlocked_levels', JSON.stringify(unlockedLevels));
+      localStorage.setItem('placify_level_stars', JSON.stringify(levelStars));
+      localStorage.setItem('placify_high_scores', JSON.stringify(highScores));
+      localStorage.setItem('placify_inventory', JSON.stringify(inventory));
+      localStorage.setItem('placify_avatar_skin', avatarSkin);
+      localStorage.setItem('placify_unlocked_skins', JSON.stringify(unlockedSkins));
       localStorage.setItem('placify_skills', JSON.stringify(skillMastery));
-    } catch (e) { console.error(e); }
-  }, [skillMastery]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem('placify_quests', JSON.stringify(quests));
-    } catch (e) { console.error(e); }
-  }, [quests]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem('placify_completed_stages', JSON.stringify(completedStages));
-    } catch (e) { console.error(e); }
-  }, [completedStages]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem('placify_skill_nodes', JSON.stringify(unlockedSkillNodes));
-    } catch (e) { console.error(e); }
-  }, [unlockedSkillNodes]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem('placify_badges', JSON.stringify(badges));
-    } catch (e) { console.error(e); }
-  }, [badges]);
-
-  useEffect(() => {
-    if (diagnosticReport) {
-      try {
-        localStorage.setItem('placify_diagnostic', JSON.stringify(diagnosticReport));
-      } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
     }
-  }, [diagnosticReport]);
+  }, [user, hearts, unlockedLevels, levelStars, highScores, inventory, avatarSkin, unlockedSkins, skillMastery, quests, completedStages, unlockedSkillNodes, badges]);
 
   const toggleAudio = () => {
-    const nextState = !soundEnabled;
-    setSoundEnabled(nextState);
-    setAudioMute(nextState);
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    setAudioMute(next);
   };
 
   const calculateLevel = (currentXP) => {
@@ -185,13 +230,8 @@ export const GameProvider = ({ children }) => {
       const newLevelObj = calculateLevel(newTotalXP);
 
       if (newLevelObj.level > prev.level) {
-        // Level up event!
         playSound('level_up');
-        confetti({
-          particleCount: 120,
-          spread: 80,
-          origin: { y: 0.6 }
-        });
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
         setLevelUpModalData({
           oldLevel: prev.level,
           newLevel: newLevelObj.level,
@@ -204,10 +244,9 @@ export const GameProvider = ({ children }) => {
           level: newLevelObj.level,
           levelTitle: newLevelObj.title,
           gems: prev.gems + 100,
-          priScore: Math.min(99, prev.priScore + 3)
+          priScore: Math.min(99, prev.priScore + 4)
         };
       } else {
-        playSound('correct');
         return {
           ...prev,
           xp: newTotalXP,
@@ -224,11 +263,117 @@ export const GameProvider = ({ children }) => {
     }));
   };
 
-  const setTargetCompany = (companyId) => {
-    setUser(prev => ({
+  const loseHeart = () => {
+    if (inventory.shield > 0) {
+      // Use shield automatically
+      playSound('powerup_used');
+      setInventory(prev => ({ ...prev, shield: prev.shield - 1 }));
+      return { heartLost: false, blockedByShield: true, remaining: hearts };
+    }
+
+    playSound('heart_lost');
+    const newHearts = Math.max(0, hearts - 1);
+    setHearts(newHearts);
+    return { heartLost: true, blockedByShield: false, remaining: newHearts };
+  };
+
+  const refillHearts = () => {
+    playSound('correct');
+    setHearts(maxHearts);
+  };
+
+  const useInventoryItem = (itemKey) => {
+    if ((inventory[itemKey] || 0) <= 0) return false;
+    playSound('powerup_used');
+    setInventory(prev => ({
       ...prev,
-      targetCompanyId: companyId
+      [itemKey]: prev[itemKey] - 1
     }));
+    return true;
+  };
+
+  const buyShopItem = (item) => {
+    if (user.gems < item.cost) {
+      playSound('wrong');
+      return false;
+    }
+
+    playSound('correct');
+    setUser(prev => ({ ...prev, gems: prev.gems - item.cost }));
+
+    if (item.id === 'heart_refill') {
+      refillHearts();
+    } else if (item.category === 'Power-up' || item.category === 'Defense' || item.category === 'Boost') {
+      setInventory(prev => ({
+        ...prev,
+        [item.id]: (prev[item.id] || 0) + 1
+      }));
+    } else if (item.color) {
+      // Avatar Skin
+      setUnlockedSkins(prev => [...new Set([...prev, item.id])]);
+      setAvatarSkin(item.id);
+    }
+    return true;
+  };
+
+  const equipAvatarSkin = (skinId) => {
+    if (!unlockedSkins.includes(skinId)) return;
+    playSound('click');
+    setAvatarSkin(skinId);
+  };
+
+  const finishLevel = (levelNumber, score, stars, earnedXp, earnedGems) => {
+    // Record Stars & High Score
+    setLevelStars(prev => ({
+      ...prev,
+      [levelNumber]: Math.max(prev[levelNumber] || 0, stars)
+    }));
+
+    setHighScores(prev => ({
+      ...prev,
+      [levelNumber]: Math.max(prev[levelNumber] || 0, score)
+    }));
+
+    // Unlock Next Level if cleared with >= 1 Star
+    if (stars >= 1) {
+      const nextLevel = levelNumber + 1;
+      if (nextLevel <= 10 && !unlockedLevels.includes(nextLevel)) {
+        setUnlockedLevels(prev => [...prev, nextLevel]);
+      }
+    }
+
+    addXP(earnedXp);
+    addGems(earnedGems);
+
+    // Trigger Loot Chest Mystery Drop
+    const possibleDrops = [
+      { type: 'gems', name: '+40 Bonus Gems 💎', value: 40 },
+      { type: 'time_freeze', name: 'Cryo Time Freeze ❄️', value: 1 },
+      { type: 'excalibur', name: '50/50 Excalibur ⚔️', value: 1 },
+      { type: 'shield', name: 'AI Firewall Shield 🛡️', value: 1 }
+    ];
+    const randomDrop = possibleDrops[Math.floor(Math.random() * possibleDrops.length)];
+
+    // Apply drop
+    if (randomDrop.type === 'gems') {
+      addGems(randomDrop.value);
+    } else {
+      setInventory(prev => ({ ...prev, [randomDrop.type]: (prev[randomDrop.type] || 0) + randomDrop.value }));
+    }
+
+    setLootChestData({
+      levelNumber,
+      stars,
+      score,
+      earnedXp,
+      earnedGems,
+      drop: randomDrop
+    });
+    setShowLootChest(true);
+  };
+
+  const setTargetCompany = (companyId) => {
+    setUser(prev => ({ ...prev, targetCompanyId: companyId }));
     playSound('click');
   };
 
@@ -236,56 +381,29 @@ export const GameProvider = ({ children }) => {
     const quest = quests.find(q => q.id === questId);
     if (!quest || quest.completed) return;
 
-    playSound('quest_complete');
+    playSound('correct');
     addXP(quest.xpReward);
     addGems(quest.gemReward);
 
-    setQuests(prev => prev.map(q => {
-      if (q.id === questId) {
-        return { ...q, progress: q.maxProgress, completed: true };
-      }
-      return q;
-    }));
-
-    if (quest.badgeAward) {
-      unlockBadge({
-        id: `badge-${Date.now()}`,
-        name: quest.badgeAward,
-        desc: `Earned by completing quest: ${quest.title}`,
-        icon: '🏆',
-        unlockedAt: 'Today'
-      });
-    }
+    setQuests(prev => prev.map(q => q.id === questId ? { ...q, progress: q.maxProgress, completed: true } : q));
   };
 
   const completeStage = (companyId, stageNumber) => {
     setCompletedStages(prev => {
       const companyCompleted = prev[companyId] || [];
       if (!companyCompleted.includes(stageNumber)) {
-        const nextList = [...companyCompleted, stageNumber];
-        return { ...prev, [companyId]: nextList };
+        return { ...prev, [companyId]: [...companyCompleted, stageNumber] };
       }
       return prev;
     });
-
-    // Award bonus XP and PRI update
     addXP(300);
     addGems(50);
   };
 
   const unlockSkillNode = (nodeId, cost) => {
-    if (user.gems < cost) {
-      playSound('wrong');
-      return false;
-    }
-
+    if (user.gems < cost) return false;
     playSound('level_up');
-    setUser(prev => ({
-      ...prev,
-      gems: prev.gems - cost,
-      priScore: Math.min(99, prev.priScore + 4)
-    }));
-
+    setUser(prev => ({ ...prev, gems: prev.gems - cost, priScore: Math.min(99, prev.priScore + 4) }));
     setUnlockedSkillNodes(prev => [...prev, nodeId]);
     confetti({ particleCount: 60, spread: 60, origin: { y: 0.7 } });
     return true;
@@ -294,33 +412,11 @@ export const GameProvider = ({ children }) => {
   const saveDiagnosticResult = (report) => {
     setDiagnosticReport(report);
     setSkillMastery(report.radarScores);
-    setUser(prev => ({
-      ...prev,
-      priScore: report.overallPRI
-    }));
-
-    // Generate personalized remediation quests
+    setUser(prev => ({ ...prev, priScore: report.overallPRI }));
     const gapQuests = generateSkillGapQuests(report.weakSkills);
-    setQuests(prev => {
-      // Mark diagnostic quest as completed
-      const updatedExisting = prev.map(q => {
-        if (q.id === 'quest-diag') {
-          return { ...q, progress: 1, completed: true };
-        }
-        return q;
-      });
-      return [...updatedExisting, ...gapQuests];
-    });
-
+    setQuests(prev => [...prev.map(q => q.id === 'quest-diag' ? { ...q, progress: 1, completed: true } : q), ...gapQuests]);
     addXP(350);
     addGems(75);
-    unlockBadge({
-      id: 'b-diag-pioneer',
-      name: 'Diagnostic Pioneer',
-      desc: 'Completed AI skill gap analysis across all 5 placement pillars.',
-      icon: '🧠',
-      unlockedAt: 'Today'
-    });
   };
 
   const unlockBadge = (badgeObj) => {
@@ -333,16 +429,22 @@ export const GameProvider = ({ children }) => {
   const resetProgress = () => {
     localStorage.clear();
     setUser(INITIAL_USER);
+    setHearts(5);
+    setUnlockedLevels([1]);
+    setLevelStars({});
+    setHighScores({});
+    setInventory({ time_freeze: 2, excalibur: 2, shield: 1, xp_potion: 1 });
+    setAvatarSkin('cyber_hacker');
+    setUnlockedSkins(['cyber_hacker']);
     setSkillMastery(INITIAL_SKILL_MASTERY);
     setDiagnosticReport(null);
     setQuests(INITIAL_QUESTS);
     setCompletedStages({ google: [1], amazon: [], zoho: [], microsoft: [] });
     setUnlockedSkillNodes(['apt-speed-math', 'dsa-arrays-hashmaps', 'hr-star-method']);
-    setBadges(INITIAL_BADGES);
+    setBadges([]);
     playSound('click');
   };
 
-  // XP Progress Calculation
   const currentLevelObj = calculateLevel(user.xp);
   const nextLevelObj = LEVEL_TITLES.find(l => l.level === currentLevelObj.level + 1) || { minXP: user.xp + 1000 };
   const xpInCurrentLevel = user.xp - currentLevelObj.minXP;
@@ -350,10 +452,20 @@ export const GameProvider = ({ children }) => {
   const xpProgressPercent = Math.min(100, Math.max(0, Math.round((xpInCurrentLevel / xpRequiredForCurrentLevel) * 100)));
 
   const targetCompany = getCompanyById(user.targetCompanyId);
+  const currentSkinObj = AVATAR_SKINS.find(s => s.id === avatarSkin) || AVATAR_SKINS[0];
 
   return (
     <GameContext.Provider value={{
       user,
+      hearts,
+      maxHearts,
+      unlockedLevels,
+      levelStars,
+      highScores,
+      inventory,
+      avatarSkin,
+      unlockedSkins,
+      currentSkinObj,
       skillMastery,
       diagnosticReport,
       quests,
@@ -365,16 +477,29 @@ export const GameProvider = ({ children }) => {
       xpProgressPercent,
       xpInCurrentLevel,
       xpRequiredForCurrentLevel,
-      nextLevelTitle: nextLevelObj.title || 'Next Tier',
       levelUpModalData,
       showCertModal,
       showGlitchCoachModal,
+      showShopModal,
+      showLootChest,
+      lootChestData,
+      activePlayLevel,
+      setActivePlayLevel,
       setLevelUpModalData,
       setShowCertModal,
       setShowGlitchCoachModal,
+      setShowShopModal,
+      setShowLootChest,
+      setLootChestData,
       toggleAudio,
       addXP,
       addGems,
+      loseHeart,
+      refillHearts,
+      buyShopItem,
+      equipAvatarSkin,
+      useInventoryItem,
+      finishLevel,
       setTargetCompany,
       completeQuest,
       completeStage,
